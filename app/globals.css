@@ -73,19 +73,26 @@
 
   body {
     @apply bg-background text-foreground;
-    background-image:
-      linear-gradient(rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.78)),
-      radial-gradient(ellipse 80% 45% at 50% -12%, hsla(0, 0%, 100%, 0.05), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 88% 112%, hsla(0, 0%, 100%, 0.03), transparent 55%),
-      url('/bg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     background-color: hsl(var(--background));
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  body::before { /* ponytail: fixed bg layer so we can GPU-zoom it; transform is compositor-only, 0 main-thread cost */
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      radial-gradient(ellipse 80% 45% at 50% -12%, hsla(0, 0%, 100%, 0.05), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 88% 112%, hsla(0, 0%, 100%, 0.03), transparent 55%),
+      linear-gradient(rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.78)),
+      url('/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: bg-zoom 120s ease-in-out infinite alternate;
+    will-change: transform;
   }
 }
 
@@ -142,6 +149,11 @@
 
 @keyframes stroke-travel {
   to { --stroke-angle: 360deg; }
+}
+
+@keyframes bg-zoom {
+  from { transform: scale(1); }
+  to   { transform: scale(1.15); }
 }
 
 @keyframes confetti-fall {
