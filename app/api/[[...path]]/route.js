@@ -6,6 +6,7 @@ const uri = process.env.MONGO_URL;
 const dbName = process.env.DB_NAME || 'freshers_quiz';
 
 let cachedClient = null;
+let seeded = false;
 async function getDb() {
   if (!cachedClient) {
     cachedClient = new MongoClient(uri);
@@ -42,6 +43,7 @@ const SEED_QUESTIONS = [
 ];
 
 async function ensureSeed(db) {
+  if (seeded) return; // ponytail: per-process flag; cold start re-seeds, warm calls skip the 5-Atlas round-trips
   let quiz = await db.collection('quiz').findOne({ id: 'main' });
   if (!quiz) {
     quiz = {
@@ -75,6 +77,7 @@ async function ensureSeed(db) {
     await db.collection('questions').createIndex({ quiz_id: 1, order: 1 });
     await db.collection('results').createIndex({ score: -1, time_taken_seconds: 1 });
   } catch (_) {}
+  seeded = true;
   return quiz;
 }
 

@@ -74,8 +74,13 @@
   body {
     @apply bg-background text-foreground;
     background-image:
+      linear-gradient(rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.78)),
       radial-gradient(ellipse 80% 45% at 50% -12%, hsla(0, 0%, 100%, 0.05), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 88% 112%, hsla(0, 0%, 100%, 0.03), transparent 55%);
+      radial-gradient(ellipse 60% 40% at 88% 112%, hsla(0, 0%, 100%, 0.03), transparent 55%),
+      url('/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
     background-color: hsl(var(--background));
     min-height: 100vh;

@@ -238,13 +238,13 @@ function Waiting({ participant, onStart }) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="glass rounded-3xl p-10 max-w-md w-full text-center"
+        className="glass stroke-anim rounded-3xl p-10 max-w-md w-full text-center"
       >
-        <motion.div
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-16 h-16 mx-auto mb-6 border-2 border-white/15 border-t-white rounded-full animate-spin"
-        />
+        <div className="relative w-20 h-20 mx-auto mb-6 rounded-full border-2 border-white/15">
+          <div className="absolute left-1/2 top-1/2 w-[2px] h-9 -ml-[1px] origin-top bg-white/90 rounded-full animate-spin" />
+          <div className="absolute left-1/2 top-1/2 w-[3px] h-6 -ml-[1.5px] origin-top bg-white rounded-full animate-[spin_4s_linear_infinite]" />
+          <div className="absolute left-1/2 top-1/2 w-2 h-2 -ml-1 -mt-1 rounded-full bg-white" />
+        </div>
         <h2 className="text-2xl font-bold tracking-tight mb-2">
           Waiting for quiz to start...
         </h2>
