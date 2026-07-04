@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  GraduationCap,
   Trophy,
   Clock,
   CheckCircle2,
@@ -27,7 +27,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Send,
-  Sparkles,
   Medal,
   Award,
   User,
@@ -35,6 +34,8 @@ import {
   Hash,
   LogIn,
   RotateCw,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 const PID_KEY = "fq_participant_id";
@@ -51,6 +52,17 @@ function fmtTime(sec) {
   return `${m}:${s}`;
 }
 
+function initials(name) {
+  if (!name) return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 // ---------- LANDING ----------
 function Landing({ onEnter, quizTitle }) {
   return (
@@ -58,54 +70,48 @@ function Landing({ onEnter, quizTitle }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="glass rounded-3xl p-8 md:p-12 max-w-3xl w-full text-center"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="glass stroke-anim rounded-[20px] p-8 md:p-12 max-w-3xl w-full text-center"
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring" }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 mb-6 shadow-lg shadow-purple-500/40"
-        >
-          <GraduationCap className="w-10 h-10 text-white" />
-        </motion.div>
-        <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 bg-clip-text text-transparent mb-3">
-          {quizTitle || "Freshers' Quiz Challenge"}
+        <h1 className="font-display text-[3.4rem] md:text-[5rem] font-black tracking-wide mb-3 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+          Quiz Challenge
         </h1>
-        <p className="text-lg text-muted-foreground mb-8">
-          College Orientation 2025 &middot; Test your knowledge &middot; Win
+        <p className="text-base md:text-lg text-muted-foreground mb-8">
+          College Orientation 2026 &middot; Test your knowledge &middot; Win
           amazing prizes
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-8 text-sm max-w-md mx-auto">
           <div className="glass rounded-xl p-4">
-            <Clock className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-            <div className="font-semibold">10 Minutes</div>
+            <Clock className="w-6 h-6 mx-auto mb-2 text-white/70" />
+            <div className="font-bold">10 Minutes</div>
             <div className="text-muted-foreground text-xs">Time Limit</div>
           </div>
           <div className="glass rounded-xl p-4">
-            <Sparkles className="w-6 h-6 mx-auto mb-2 text-pink-400" />
-            <div className="font-semibold">Live Quiz</div>
-            <div className="text-muted-foreground text-xs">
-              Server-Synced Timer
-            </div>
-          </div>
-          <div className="glass rounded-xl p-4">
-            <Trophy className="w-6 h-6 mx-auto mb-2 text-yellow-400" />
-            <div className="font-semibold">Top 3 Wins</div>
-            <div className="text-muted-foreground text-xs">
-              Fastest & Highest Score
-            </div>
+            <Trophy className="w-6 h-6 mx-auto mb-2 text-white/70" />
+            <div className="font-bold">Top 3 Wins</div>
+            <div className="text-muted-foreground text-xs">Fastest & Highest</div>
           </div>
         </div>
-        <Button
-          size="lg"
-          onClick={onEnter}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-lg px-8 py-6 h-auto rounded-xl shadow-lg shadow-purple-500/40"
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.4, ease: "easeOut" }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.96 }}
+          className="block md:inline-block"
         >
-          Enter Quiz <ArrowRight className="ml-2 w-5 h-5" />
-        </Button>
-        <p className="text-xs text-muted-foreground mt-6">
-          One attempt only &middot; No login required &middot; Good luck!
+          <Button
+            size="lg"
+            onClick={onEnter}
+            className="group w-full md:w-auto bg-white text-black hover:bg-white/90 h-12 px-12 rounded-xl text-base font-bold shadow-glow"
+          >
+            Enter Quiz <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </motion.div>
+        <p className="text-xs mt-6 flex items-center justify-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
+          <span className="text-yellow-400 font-medium">One attempt only</span>
+          <span className="text-muted-foreground">&middot; Good luck!</span>
         </p>
       </motion.div>
     </div>
@@ -149,18 +155,14 @@ function Register({ onRegistered }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass rounded-3xl p-8 md:p-10 max-w-md w-full"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="glass stroke-anim rounded-3xl p-8 md:p-10 max-w-md w-full"
       >
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
             <User className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold">Register</h2>
-            <p className="text-sm text-muted-foreground">
-              Enter your details to join
-            </p>
-          </div>
+          <h2 className="font-display text-4xl md:text-5xl font-black tracking-wide">Register</h2>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -172,7 +174,7 @@ function Register({ onRegistered }) {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="John Doe"
-              className="h-11"
+              className="h-12 rounded-xl"
               required
             />
           </div>
@@ -185,7 +187,7 @@ function Register({ onRegistered }) {
               value={form.course}
               onChange={(e) => setForm({ ...form, course: e.target.value })}
               placeholder="B.Tech CSE"
-              className="h-11"
+              className="h-12 rounded-xl"
               required
             />
           </div>
@@ -198,13 +200,13 @@ function Register({ onRegistered }) {
               value={form.usn}
               onChange={(e) => setForm({ ...form, usn: e.target.value })}
               placeholder="1AB25CS001"
-              className="h-11"
+              className="h-12 rounded-xl"
             />
           </div>
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-gradient-to-r from-purple-500 to-pink-500"
+            className="w-full h-12 rounded-xl bg-white text-black font-bold hover:bg-white/90 active:scale-[0.98] transition-transform duration-200 stroke-anim"
           >
             {loading ? "Registering..." : "Continue to Quiz"}{" "}
             <ArrowRight className="ml-2 w-4 h-4" />
@@ -236,19 +238,19 @@ function Waiting({ participant, onStart }) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="glass rounded-3xl p-10 max-w-md text-center"
+        className="glass rounded-3xl p-10 max-w-md w-full text-center"
       >
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 mx-auto mb-6 border-4 border-purple-500 border-t-transparent rounded-full"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="w-16 h-16 mx-auto mb-6 border-2 border-white/15 border-t-white rounded-full animate-spin"
         />
-        <h2 className="text-2xl font-bold mb-2">
+        <h2 className="text-2xl font-bold tracking-tight mb-2">
           Waiting for quiz to start...
         </h2>
         <p className="text-muted-foreground mb-4">
           Hi{" "}
-          <span className="text-purple-300 font-semibold">
+          <span className="text-white font-semibold">
             {participant.name}
           </span>
           , please stay on this page.
@@ -362,22 +364,22 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const timeLow = remaining < 60;
 
   return (
-    <div className="min-h-screen p-4 no-select">
+    <div className="min-h-screen p-3 md:p-4 no-select">
       {/* Top Bar */}
-      <div className="max-w-6xl mx-auto glass rounded-2xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
+      <div className="max-w-6xl mx-auto glass rounded-2xl p-3 md:p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-sm font-bold shrink-0">
+            {initials(participant.name)}
           </div>
-          <div>
-            <div className="font-bold">{participant.name}</div>
-            <div className="text-xs text-muted-foreground">
+          <div className="min-w-0">
+            <div className="font-bold truncate">{participant.name}</div>
+            <div className="text-xs text-muted-foreground truncate">
               {participant.course}
             </div>
           </div>
         </div>
         <div
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-lg ${timeLow ? "bg-red-500/20 text-red-300 animate-pulse" : "bg-purple-500/20 text-purple-300"}`}
+          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl font-mono font-bold text-lg md:text-xl border transition-colors duration-200 ${timeLow ? "bg-white/15 text-white border-white/20 animate-pulse" : "bg-white/5 text-white border-white/10"}`}
         >
           <Clock className="w-5 h-5" /> {fmtTime(remaining)}
         </div>
@@ -386,10 +388,10 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
             {answeredCount}/{questions.length} answered
           </Badge>
           {saving && (
-            <Badge className="bg-green-500/20 text-green-300">Saving...</Badge>
+            <Badge className="bg-white/10 text-white">Saving...</Badge>
           )}
           {!saving && (
-            <Badge className="bg-green-500/20 text-green-300">
+            <Badge className="bg-white/10 text-white">
               <CheckCircle2 className="w-3 h-3 mr-1" />
               Auto-saved
             </Badge>
@@ -398,27 +400,27 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       </div>
 
       <div className="max-w-6xl mx-auto mb-4">
-        <Progress value={progress} className="h-2" />
+        <Progress value={progress} className="h-1.5" />
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         {/* Question */}
-        <Card className="glass p-6 md:p-8">
-          <div className="flex items-center justify-between mb-4">
-            <Badge className="bg-purple-500/20 text-purple-300">
+        <Card className="glass p-6 md:p-8 rounded-2xl">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <Badge className="bg-white/10 text-white">
               Question {current + 1} of {questions.length}
             </Badge>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleMark}
-              className={marked.has(q.id) ? "text-yellow-400" : ""}
+              className={`shrink-0 ${marked.has(q.id) ? "text-white border border-white/20 bg-white/5" : "text-muted-foreground"}`}
             >
               <Flag className="w-4 h-4 mr-1" />{" "}
               {marked.has(q.id) ? "Marked" : "Mark for Review"}
             </Button>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-6 leading-relaxed">
+          <h2 className="text-xl md:text-2xl font-bold mb-6 leading-relaxed break-words">
             {q.question_text}
           </h2>
           {q.image_url && (
@@ -435,35 +437,36 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
                 <button
                   key={idx}
                   onClick={() => selectOption(idx)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected ? "border-purple-500 bg-purple-500/20" : "border-white/10 hover:border-white/30 hover:bg-white/5"}`}
+                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 min-h-[56px] flex items-center ${selected ? "border-white bg-white/10" : "border-white/10 hover:border-white/30 hover:bg-white/5 active:scale-[0.99]"}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${selected ? "bg-purple-500 text-white" : "bg-white/10"}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 transition-colors duration-200 ${selected ? "bg-white text-black" : "bg-white/10 text-white"}`}
                     >
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="flex-1">{opt}</span>
+                    <span className="flex-1 break-words">{opt}</span>
                     {selected && (
-                      <CheckCircle2 className="w-5 h-5 text-purple-400" />
+                      <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
                     )}
                   </div>
                 </button>
               );
             })}
           </div>
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
+          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10 gap-2">
             <Button
               variant="outline"
               onClick={() => setCurrent((c) => Math.max(0, c - 1))}
               disabled={current === 0}
+              className="h-11"
             >
               <ArrowLeft className="w-4 h-4 mr-1" /> Previous
             </Button>
             {current === questions.length - 1 ? (
               <Button
                 onClick={() => setShowConfirm(true)}
-                className="bg-gradient-to-r from-green-500 to-emerald-500"
+                className="h-11 bg-white text-black hover:bg-white/90"
               >
                 <Send className="w-4 h-4 mr-1" /> Submit Quiz
               </Button>
@@ -472,7 +475,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
                 onClick={() =>
                   setCurrent((c) => Math.min(questions.length - 1, c + 1))
                 }
-                className="bg-gradient-to-r from-purple-500 to-pink-500"
+                className="h-11 bg-white text-black hover:bg-white/90"
               >
                 Next <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
@@ -481,23 +484,23 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
         </Card>
 
         {/* Palette */}
-        <Card className="glass p-4 h-fit">
+        <Card className="glass p-4 h-fit rounded-2xl lg:sticky lg:top-4">
           <h3 className="font-bold mb-3">Question Palette</h3>
           <div className="grid grid-cols-5 gap-2 mb-4">
             {questions.map((qq, i) => {
               const isAns = answers[qq.id] !== undefined;
               const isMark = marked.has(qq.id);
               const isCur = i === current;
-              let cls = "bg-white/10 text-white";
-              if (isAns && isMark) cls = "bg-purple-500 text-white";
-              else if (isAns) cls = "bg-green-500 text-white";
-              else if (isMark) cls = "bg-yellow-500 text-white";
-              if (isCur) cls += " ring-2 ring-white";
+              let cls = "bg-white/10 text-white/70";
+              if (isAns && isMark) cls = "bg-white text-black ring-1 ring-white";
+              else if (isAns) cls = "bg-white text-black";
+              else if (isMark) cls = "bg-transparent border border-white text-white";
+              if (isCur) cls += " ring-2 ring-white/60";
               return (
                 <button
                   key={i}
                   onClick={() => setCurrent(i)}
-                  className={`w-10 h-10 rounded-lg text-sm font-bold ${cls}`}
+                  className={`w-10 h-10 rounded-lg text-sm font-bold transition-transform duration-150 active:scale-95 ${cls}`}
                 >
                   {i + 1}
                 </button>
@@ -506,22 +509,22 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           </div>
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-green-500" /> Answered
+              <div className="w-4 h-4 rounded bg-white" /> Answered
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-white/10" /> Not Answered
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-500" /> Marked
+              <div className="w-4 h-4 rounded border border-white" /> Marked
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-purple-500" /> Answered +
+              <div className="w-4 h-4 rounded bg-white ring-1 ring-white" /> Answered +
               Marked
             </div>
           </div>
           <Button
             onClick={() => setShowConfirm(true)}
-            className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500"
+            className="w-full mt-4 h-11 bg-white text-black hover:bg-white/90"
           >
             <Send className="w-4 h-4 mr-1" /> Submit Quiz
           </Button>
@@ -529,12 +532,12 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       </div>
 
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent className="glass-strong">
+        <DialogContent className="glass-strong rounded-3xl">
           <DialogHeader>
             <DialogTitle>Submit Quiz?</DialogTitle>
             <DialogDescription>
               You have answered{" "}
-              <span className="font-bold text-purple-300">{answeredCount}</span>{" "}
+              <span className="font-bold text-white">{answeredCount}</span>{" "}
               out of <span className="font-bold">{questions.length}</span>{" "}
               questions. This action cannot be undone.
             </DialogDescription>
@@ -545,7 +548,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
             </Button>
             <Button
               onClick={doSubmit}
-              className="bg-gradient-to-r from-green-500 to-emerald-500"
+              className="bg-white text-black hover:bg-white/90"
             >
               Submit Now
             </Button>
@@ -562,20 +565,21 @@ function Results({ result, onLeaderboard }) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="glass rounded-3xl p-8 md:p-10 max-w-2xl w-full"
       >
         <div className="text-center mb-6">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 mb-4"
+            transition={{ delay: 0.25, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white text-black mb-4 shadow-glow"
           >
-            <CheckCircle2 className="w-10 h-10 text-white" />
+            <CheckCircle2 className="w-10 h-10" />
           </motion.div>
-          <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
             Quiz Submitted!
           </h1>
           <p className="text-muted-foreground">
@@ -584,25 +588,29 @@ function Results({ result, onLeaderboard }) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="glass rounded-xl p-4 text-center">
-            <div className="text-3xl font-black text-green-400">
+            <CheckCircle2 className="w-5 h-5 mx-auto mb-2 text-white" />
+            <div className="text-3xl font-black text-white">
               {result?.correct ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Correct</div>
           </div>
           <div className="glass rounded-xl p-4 text-center">
-            <div className="text-3xl font-black text-red-400">
+            <XCircle className="w-5 h-5 mx-auto mb-2 text-white/35" />
+            <div className="text-3xl font-black text-white/40">
               {result?.wrong ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Wrong</div>
           </div>
           <div className="glass rounded-xl p-4 text-center">
-            <div className="text-3xl font-black text-purple-400">
+            <Trophy className="w-5 h-5 mx-auto mb-2 text-white/70" />
+            <div className="text-3xl font-black text-white">
               {result?.score ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Score</div>
           </div>
           <div className="glass rounded-xl p-4 text-center">
-            <div className="text-3xl font-black text-yellow-400">{pct}%</div>
+            <Award className="w-5 h-5 mx-auto mb-2 text-white/70" />
+            <div className="text-3xl font-black text-white">{pct}%</div>
             <div className="text-xs text-muted-foreground mt-1">Percentage</div>
           </div>
         </div>
@@ -620,7 +628,7 @@ function Results({ result, onLeaderboard }) {
         </div>
         <Button
           onClick={onLeaderboard}
-          className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500"
+          className="w-full h-12 rounded-xl bg-white text-black hover:bg-white/90 active:scale-[0.98] transition-transform duration-200"
         >
           <Trophy className="w-5 h-5 mr-2" /> View Leaderboard
         </Button>
@@ -632,12 +640,12 @@ function Results({ result, onLeaderboard }) {
 // ---------- LEADERBOARD + WINNERS ----------
 function Confetti() {
   const colors = [
-    "#a855f7",
-    "#ec4899",
-    "#3b82f6",
-    "#f59e0b",
-    "#10b981",
-    "#ef4444",
+    "#ffffff",
+    "#e5e5e5",
+    "#a3a3a3",
+    "#737373",
+    "#525252",
+    "#d4d4d4",
   ];
   return (
     <>
@@ -687,25 +695,27 @@ function Leaderboard({ myResult, onRestart }) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8 pt-4"
         >
-          <h1 className="text-4xl md:text-6xl font-black bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
             Leaderboard
           </h1>
           <p className="text-muted-foreground">
             Congratulations to all participants!
           </p>
           {myRank && (
-            <Badge className="mt-3 bg-purple-500/30 text-purple-100 text-base px-4 py-1">
+            <Badge className="mt-3 bg-white/15 text-white text-base px-4 py-1">
               Your Rank: #{myRank}
             </Badge>
           )}
         </motion.div>
 
         {loading ? (
-          <div className="text-center py-20 text-muted-foreground">
-            Loading leaderboard...
+          <div className="space-y-3 max-w-2xl mx-auto">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+            ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="text-center py-20 glass rounded-2xl">
+          <div className="text-center py-20 glass rounded-3xl">
             No submissions yet. Be the first!
           </div>
         ) : (
@@ -716,40 +726,42 @@ function Leaderboard({ myResult, onRestart }) {
                 {[1, 0, 2].map((pos) => {
                   const p = top3[pos];
                   if (!p) return <div key={pos} />;
-                  const trophies = ["🥇", "🥈", "🥉"];
-                  const gradients = [
-                    "from-yellow-400 to-yellow-600",
-                    "from-gray-300 to-gray-500",
-                    "from-orange-400 to-orange-600",
-                  ];
                   const heights = ["md:mt-0", "md:mt-8", "md:mt-12"];
+                  const opacities = ["text-white", "text-white/70", "text-white/45"];
+                  const ringStyles = [
+                    "border-white text-white",
+                    "border-white/70 text-white",
+                    "border-white/40 text-white",
+                  ];
+                  const numOpacity = ["text-white", "text-white/80", "text-white/60"];
                   return (
                     <motion.div
                       key={p.participant_id}
                       initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: pos * 0.15 }}
+                      transition={{ delay: pos * 0.12, duration: 0.4 }}
                       className={`glass-strong rounded-2xl p-6 text-center ${heights[pos]}`}
                     >
-                      <div className="text-5xl mb-2">{trophies[pos]}</div>
                       <div
-                        className={`inline-block px-3 py-1 rounded-full bg-gradient-to-r ${gradients[pos]} text-black font-bold text-sm mb-3`}
+                        className={`inline-flex w-12 h-12 rounded-full border-2 items-center justify-center font-black mb-3 ${ringStyles[pos]}`}
                       >
-                        RANK #{pos + 1}
+                        {pos + 1}
                       </div>
-                      <div className="font-bold text-lg truncate">
+                      <div
+                        className={`font-bold text-lg truncate ${numOpacity[pos]}`}
+                      >
                         {p.participant_name}
                       </div>
                       <div className="text-xs text-muted-foreground mb-3">
                         {p.participant_course}
                       </div>
-                      <div className="text-4xl font-black text-purple-300">
+                      <div className={`text-4xl font-black ${opacities[pos]}`}>
                         {p.score}
                         <span className="text-lg text-muted-foreground">
                           /{p.total}
                         </span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-xs text-muted-foreground mt-1 font-mono">
                         {fmtTime(p.time_taken_seconds)}
                       </div>
                     </motion.div>
@@ -760,11 +772,11 @@ function Leaderboard({ myResult, onRestart }) {
 
             {/* Rest */}
             {rest.length > 0 && (
-              <Card className="glass overflow-hidden">
+              <Card className="glass overflow-hidden rounded-2xl">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-white/10 text-left text-xs uppercase text-muted-foreground">
+                      <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wide text-muted-foreground">
                         <th className="p-3">Rank</th>
                         <th className="p-3">Name</th>
                         <th className="p-3">Course</th>
@@ -776,14 +788,14 @@ function Leaderboard({ myResult, onRestart }) {
                       {rest.map((r) => (
                         <tr
                           key={r.participant_id}
-                          className={`border-b border-white/5 ${r.participant_id === myResult?.participant_id ? "bg-purple-500/10" : ""}`}
+                          className={`border-b border-white/5 transition-colors duration-150 ${r.participant_id === myResult?.participant_id ? "bg-white/[0.06]" : "hover:bg-white/[0.03]"}`}
                         >
                           <td className="p-3 font-bold">#{r.rank}</td>
                           <td className="p-3">{r.participant_name}</td>
                           <td className="p-3 text-muted-foreground text-sm">
                             {r.participant_course}
                           </td>
-                          <td className="p-3 text-right font-mono font-bold text-purple-300">
+                          <td className="p-3 text-right font-mono font-bold text-white">
                             {r.score}/{r.total}
                           </td>
                           <td className="p-3 text-right text-muted-foreground font-mono text-sm">
@@ -799,7 +811,7 @@ function Leaderboard({ myResult, onRestart }) {
           </>
         )}
         <div className="text-center mt-8">
-          <Button variant="outline" onClick={onRestart}>
+          <Button variant="outline" onClick={onRestart} className="h-11">
             <RotateCw className="w-4 h-4 mr-1" /> Back to Home
           </Button>
         </div>
@@ -884,8 +896,13 @@ function App() {
 
   if (view === "loading")
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="glass rounded-3xl p-8 max-w-md w-full space-y-4">
+          <Skeleton className="h-16 w-16 rounded-2xl mx-auto" />
+          <Skeleton className="h-9 w-3/4 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+        </div>
       </div>
     );
   if (view === "landing")

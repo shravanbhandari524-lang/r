@@ -17,6 +17,15 @@ module.exports = {
         }
       },
       extend: {
+        fontFamily: {
+          sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+          display: ['var(--font-display)', 'ui-serif', 'Georgia', 'serif'],
+        },
+        boxShadow: {
+          soft: '0 8px 40px rgba(0,0,0,0.55)',
+          glow: '0 0 80px -24px rgba(255,255,255,0.18)',
+          'inset-hi': 'inset 0 1px 0 0 rgba(255,255,255,0.06)',
+        },
         colors: {
           border: 'hsl(var(--border))',
           input: 'hsl(var(--input))',
