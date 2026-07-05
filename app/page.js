@@ -354,7 +354,8 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       // Clear draft on success
       try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
       
-      // Trigger the 5s GIF transition screen
+      // Close the confirmation dialog, then show GIF transition
+      setShowConfirm(false);
       setShowGifTransition(true);
       setTimeout(() => {
         onSubmit(data.result);
