@@ -89,7 +89,9 @@ function Landing({ onEnter, quizTitle }) {
           <div className="glass rounded-xl p-4">
             <Trophy className="w-6 h-6 mx-auto mb-2 text-white/70" />
             <div className="font-bold">Top 3 Wins</div>
-            <div className="text-muted-foreground text-xs">Fastest & Highest</div>
+            <div className="text-muted-foreground text-xs">
+              Fastest & Highest
+            </div>
           </div>
         </div>
         <motion.div
@@ -105,7 +107,8 @@ function Landing({ onEnter, quizTitle }) {
             onClick={onEnter}
             className="group w-full md:w-auto bg-white text-black hover:bg-white/90 h-12 px-12 rounded-xl text-base font-bold shadow-glow"
           >
-            Enter Quiz <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+            Enter Quiz{" "}
+            <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
           </Button>
         </motion.div>
         <p className="text-xs mt-6 flex items-center justify-center gap-1.5">
@@ -144,7 +147,7 @@ function Register({ onRegistered }) {
       localStorage.setItem(PID_KEY, data.participant.id);
       toast.success(
         `Registered! Your number is #${data.participant.reg_number} — note it down.`,
-        { duration: 8000 }
+        { duration: 8000 },
       );
       onRegistered(data.participant);
     } catch (err) {
@@ -165,7 +168,9 @@ function Register({ onRegistered }) {
           <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
             <User className="w-6 h-6 text-white" />
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-normal tracking-wide">Register</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-normal tracking-wide">
+            Register
+          </h2>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -256,16 +261,20 @@ function Waiting({ participant, onStart }) {
         </h2>
         <p className="text-muted-foreground mb-3">
           Hi{" "}
-          <span className="text-white font-semibold">{participant.name}</span>
-          , please stay on this page.
+          <span className="text-white font-semibold">{participant.name}</span>,
+          please stay on this page.
         </p>
         {participant.reg_number && (
           <div className="mb-5">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Your Registration Number</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
+              Your Registration Number
+            </p>
             <div className="inline-flex items-center justify-center bg-gradient-to-b from-white to-zinc-300 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.95),inset_0_-2px_3px_rgba(0,0,0,0.2),0_6px_18px_rgba(0,0,0,0.5)] text-black font-black text-4xl tracking-[0.2em] rounded-2xl px-8 py-4 select-all">
               #{participant.reg_number}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Screenshot or note this down</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Screenshot or note this down
+            </p>
           </div>
         )}
         <p className="text-sm text-muted-foreground mb-6">
@@ -276,7 +285,9 @@ function Waiting({ participant, onStart }) {
           disabled={checking}
           className="h-11 bg-white text-black hover:bg-white/90 font-semibold"
         >
-          <RotateCw className={`w-4 h-4 mr-2 ${checking ? "animate-spin" : ""}`} />
+          <RotateCw
+            className={`w-4 h-4 mr-2 ${checking ? "animate-spin" : ""}`}
+          />
           {checking ? "Checking..." : "Check Status"}
         </Button>
       </motion.div>
@@ -301,8 +312,6 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showGifTransition, setShowGifTransition] = useState(false);
 
-
-
   // Load answers/marked from localStorage after mount to prevent hydration mismatch
   useEffect(() => {
     try {
@@ -320,7 +329,10 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   useEffect(() => {
     if (!isLoaded) return;
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, marked: Array.from(marked) }));
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ answers, marked: Array.from(marked) }),
+      );
     } catch (_) {}
   }, [answers, marked, DRAFT_KEY, isLoaded]);
 
@@ -352,8 +364,10 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Submit failed");
       // Clear draft on success
-      try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
-      
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch (_) {}
+
       // Close the confirmation dialog, then show GIF transition
       setShowConfirm(false);
       setShowGifTransition(true);
@@ -418,22 +432,21 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const getPageNumbers = () => {
     const total = questions.length;
     const currentNum = current + 1; // 1-indexed
-    
+
     if (total <= 6) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
 
     if (currentNum <= 3) {
-      return [1, 2, 3, 4, '...', total];
+      return [1, 2, 3, 4, "...", total];
     }
 
     if (currentNum >= total - 2) {
-      return [1, '...', total - 3, total - 2, total - 1, total];
+      return [1, "...", total - 3, total - 2, total - 1, total];
     }
 
-    return [1, '...', currentNum - 1, currentNum, currentNum + 1, '...', total];
+    return [1, "...", currentNum - 1, currentNum, currentNum + 1, "...", total];
   };
-
 
   return (
     <div className="h-[100dvh] w-full flex flex-col justify-between p-3 md:p-4 no-select max-w-md mx-auto overflow-hidden">
@@ -450,18 +463,21 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 
       {/* Thin Progress Indicator */}
       <div className="w-full bg-white/5 h-[1.5px] rounded-full my-2 shrink-0 overflow-hidden">
-        <div 
-          className="bg-white h-full transition-all duration-300 rounded-full" 
-          style={{ width: `${progress}%` }} 
+        <div
+          className="bg-white h-full transition-all duration-300 rounded-full"
+          style={{ width: `${progress}%` }}
         />
       </div>
 
       {/* Slim Question Navigator */}
       <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none py-1 mb-2 shrink-0">
         {getPageNumbers().map((num, idx) => {
-          if (num === '...') {
+          if (num === "...") {
             return (
-              <span key={`dots-${idx}`} className="w-8 text-center text-white/30 text-xs font-bold select-none">
+              <span
+                key={`dots-${idx}`}
+                className="w-8 text-center text-white/30 text-xs font-bold select-none"
+              >
                 ...
               </span>
             );
@@ -469,7 +485,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           const qIdx = num - 1;
           const isAns = answers[questions[qIdx].id] !== undefined;
           const isCur = qIdx === current;
-          
+
           return (
             <button
               key={qIdx}
@@ -478,8 +494,8 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
                 isCur
                   ? "bg-white text-black shadow-glow"
                   : isAns
-                  ? "bg-white/15 text-white border border-white/5"
-                  : "bg-white/5 border border-white/5 text-white/40 hover:text-white"
+                    ? "bg-white/15 text-white border border-white/5"
+                    : "bg-white/5 border border-white/5 text-white/40 hover:text-white"
               }`}
             >
               {num}
@@ -508,7 +524,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
               <img
                 src={q.image_url}
                 alt=""
-                className="rounded-lg max-h-24 md:max-h-28 object-contain"
+                className="rounded-lg max-h-36 md:max-h-39 object-contain"
               />
             </div>
           )}
@@ -522,14 +538,16 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
                   key={idx}
                   onClick={() => selectOption(idx)}
                   className={`w-full text-left p-3 rounded-xl border transition-all duration-155 flex items-center gap-3 shrink-0 ${
-                    selected 
-                      ? "border-white bg-white/10" 
+                    selected
+                      ? "border-white bg-white/10"
                       : "border-white/5 bg-white/5 hover:border-white/15 active:scale-[0.99]"
                   }`}
                 >
                   <div
                     className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-colors duration-150 ${
-                      selected ? "bg-white text-black" : "bg-white/10 text-white/70"
+                      selected
+                        ? "bg-white text-black"
+                        : "bg-white/10 text-white/70"
                     }`}
                   >
                     {String.fromCharCode(65 + idx)}
@@ -556,10 +574,12 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" /> Previous
           </Button>
-          
+
           <Button
             variant="outline"
-            onClick={() => setCurrent((c) => Math.min(questions.length - 1, c + 1))}
+            onClick={() =>
+              setCurrent((c) => Math.min(questions.length - 1, c + 1))
+            }
             disabled={current === questions.length - 1}
             className="flex-1 h-10 bg-white/5 hover:bg-white/10 text-white border-white/5 disabled:opacity-30 disabled:hover:bg-white/5"
           >
@@ -582,18 +602,21 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent className="glass-strong rounded-3xl max-w-[340px] p-5">
           <DialogHeader className="text-center">
-            <DialogTitle className="text-lg font-bold">Submit Quiz?</DialogTitle>
+            <DialogTitle className="text-lg font-bold">
+              Submit Quiz?
+            </DialogTitle>
             <DialogDescription className="text-xs text-white/60 pt-2">
               You have answered{" "}
-              <span className="font-bold text-white">{answeredCount}</span>{" "}
-              out of <span className="font-bold text-white">{questions.length}</span>{" "}
+              <span className="font-bold text-white">{answeredCount}</span> out
+              of{" "}
+              <span className="font-bold text-white">{questions.length}</span>{" "}
               questions. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-row gap-2 mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowConfirm(false)} 
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirm(false)}
               className="flex-1 h-10 bg-white/5 text-white border-white/5 hover:bg-white/10"
             >
               Cancel
@@ -611,14 +634,18 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       {/* GIF preloaded silently in background from quiz start, shown on submit */}
       <div
         style={{
-          position: 'fixed', inset: 0, zIndex: 50,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          backdropFilter: 'blur(12px)',
-          padding: '1rem',
+          position: "fixed",
+          inset: 0,
+          zIndex: 50,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          backdropFilter: "blur(12px)",
+          padding: "1rem",
           opacity: showGifTransition ? 1 : 0,
-          pointerEvents: showGifTransition ? 'all' : 'none',
-          transition: 'opacity 0.3s ease',
+          pointerEvents: showGifTransition ? "all" : "none",
+          transition: "opacity 0.3s ease",
         }}
       >
         <div className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center gap-4 shadow-2xl">
@@ -633,8 +660,12 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
             />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-wide text-white">Submitting Answers...</h2>
-            <p className="text-xs text-white/50">Saving your scores and details</p>
+            <h2 className="text-xl font-bold tracking-wide text-white">
+              Submitting Answers...
+            </h2>
+            <p className="text-xs text-white/50">
+              Saving your scores and details
+            </p>
           </div>
         </div>
       </div>
@@ -821,13 +852,21 @@ function Leaderboard({ myResult, onRestart }) {
                   const p = top3[pos];
                   if (!p) return <div key={pos} />;
                   const heights = ["md:mt-0", "md:mt-8", "md:mt-12"];
-                  const opacities = ["text-white", "text-white/70", "text-white/45"];
+                  const opacities = [
+                    "text-white",
+                    "text-white/70",
+                    "text-white/45",
+                  ];
                   const ringStyles = [
                     "border-white text-white",
                     "border-white/70 text-white",
                     "border-white/40 text-white",
                   ];
-                  const numOpacity = ["text-white", "text-white/80", "text-white/60"];
+                  const numOpacity = [
+                    "text-white",
+                    "text-white/80",
+                    "text-white/60",
+                  ];
                   return (
                     <motion.div
                       key={p.participant_id}
@@ -959,7 +998,9 @@ function App() {
   }, []);
 
   const loadQuiz = async (p, q) => {
-    const res = await fetch(`/api/quiz/questions?participant_id=${encodeURIComponent(p.id)}`);
+    const res = await fetch(
+      `/api/quiz/questions?participant_id=${encodeURIComponent(p.id)}`,
+    );
     if (res.ok) {
       const data = await res.json();
       setQuestions(data.questions);
