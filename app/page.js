@@ -73,7 +73,7 @@ function Landing({ onEnter, quizTitle }) {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="glass stroke-anim rounded-[20px] p-8 md:p-12 max-w-3xl w-full text-center"
       >
-        <h1 className="font-display text-[3.4rem] md:text-[5rem] font-normal tracking-wide mb-3 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+        <h1 className="font-display text-[2.9rem] md:text-[5rem] font-normal tracking-wide mb-3 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
           Quiz Challenge
         </h1>
         <p className="text-base md:text-lg text-muted-foreground mb-8">
@@ -293,30 +293,47 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 
   const [questions] = useState(initialQs);
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState(() => {
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) return JSON.parse(saved).answers || {};
-    } catch (_) {}
-    return {};
-  });
-  const [marked, setMarked] = useState(() => {
-    try {
-      const saved = localStorage.getItem(DRAFT_KEY);
-      if (saved) return new Set(JSON.parse(saved).marked || []);
-    } catch (_) {}
-    return new Set();
-  });
+  const [answers, setAnswers] = useState({});
+  const [marked, setMarked] = useState(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
   const [remaining, setRemaining] = useState(null);
   const submittedRef = useRef(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showGifTransition, setShowGifTransition] = useState(false);
+
+  // Load Tenor embed script when transition overlay mounts
+  useEffect(() => {
+    if (!showGifTransition) return;
+    const script = document.createElement("script");
+    script.src = "https://tenor.com/embed.js";
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      try { document.body.removeChild(script); } catch (_) {}
+    };
+  }, [showGifTransition]);
+
+  // Load answers/marked from localStorage after mount to prevent hydration mismatch
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.answers) setAnswers(parsed.answers);
+        if (parsed.marked) setMarked(new Set(parsed.marked));
+      }
+    } catch (_) {}
+    setIsLoaded(true);
+  }, [DRAFT_KEY]);
 
   // Mirror answers/marked to localStorage on every change
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, marked: Array.from(marked) }));
     } catch (_) {}
-  }, [answers, marked, DRAFT_KEY]);
+  }, [answers, marked, DRAFT_KEY, isLoaded]);
 
   // compute end time from server started_at + duration
   useEffect(() => {
@@ -347,7 +364,12 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       if (!res.ok) throw new Error(data.error || "Submit failed");
       // Clear draft on success
       try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
-      onSubmit(data.result);
+      
+      // Trigger the 2.5s GIF transition screen
+      setShowGifTransition(true);
+      setTimeout(() => {
+        onSubmit(data.result);
+      }, 2500);
     } catch (err) {
       // Allow retry — server-side is idempotent
       submittedRef.current = false;
@@ -403,187 +425,214 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const progress = ((current + 1) / questions.length) * 100;
   const timeLow = remaining < 60;
 
-  return (
-    <div className="min-h-screen p-3 md:p-4 no-select">
-      {/* Top Bar */}
-      <div className="max-w-6xl mx-auto glass rounded-2xl p-3 md:p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-sm font-bold shrink-0">
-            {initials(participant.name)}
-          </div>
-          <div className="min-w-0">
-            <div className="font-bold truncate">{participant.name}</div>
-            <div className="text-xs text-muted-foreground truncate">
-              {participant.course}
+  const getPageNumbers = () => {
+    const total = questions.length;
+    const currentNum = current + 1; // 1-indexed
+    
+    if (total <= 6) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    if (currentNum <= 3) {
+      return [1, 2, 3, 4, '...', total];
+    }
+
+    if (currentNum >= total - 2) {
+      return [1, '...', total - 3, total - 2, total - 1, total];
+    }
+
+    return [1, '...', currentNum - 1, currentNum, currentNum + 1, '...', total];
+  };
+
+  if (showGifTransition) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center gap-4 shadow-2xl"
+        >
+          <div className="w-[280px] h-[280px] flex items-center justify-center overflow-hidden rounded-2xl bg-black/40 border border-white/5">
+            <div className="tenor-gif-embed" data-postid="5034219186050115128" data-share-method="host" data-aspect-ratio="0.993976" data-width="100%">
+              <a href="https://tenor.com/view/cat-scuba-dance-gif-5034219186050115128">Cat Scuba GIF</a>
             </div>
           </div>
-        </div>
-        <div
-          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-xl font-mono font-bold text-lg md:text-xl border transition-colors duration-200 ${timeLow ? "bg-white/15 text-white border-white/20 animate-pulse" : "bg-white/5 text-white border-white/10"}`}
-        >
-          <Clock className="w-5 h-5" /> {fmtTime(remaining)}
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Badge variant="secondary">
-            {answeredCount}/{questions.length} answered
-          </Badge>
-          <Badge className="bg-white/10 text-white">
-            <CheckCircle2 className="w-3 h-3 mr-1" />
-            Saved on this device
-          </Badge>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto mb-4">
-        <Progress value={progress} className="h-1.5" />
-      </div>
-
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
-        {/* Question */}
-        <Card className="glass stroke-anim p-6 md:p-8 rounded-2xl">
-          <div className="flex items-center justify-between mb-4 gap-2">
-            <Badge className="bg-white/10 text-white">
-              Question {current + 1} of {questions.length}
-            </Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMark}
-              className={`shrink-0 ${marked.has(q.id) ? "text-white border border-white/20 bg-white/5" : "text-muted-foreground"}`}
-            >
-              <Flag className="w-4 h-4 mr-1" />{" "}
-              {marked.has(q.id) ? "Marked" : "Mark for Review"}
-            </Button>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-wide text-white">Submitting Answers...</h2>
+            <p className="text-xs text-white/50">Saving your scores and details</p>
           </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-6 leading-relaxed break-words">
-            {q.question_text}
-          </h2>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-[100dvh] w-full flex flex-col justify-between p-3 md:p-4 no-select max-w-md mx-auto overflow-hidden">
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-1 py-1 text-sm shrink-0">
+        <span className="font-mono font-bold tracking-tight text-white/90 bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+          <Clock className="w-3.5 h-3.5 text-white/70" />
+          {fmtTime(remaining)}
+        </span>
+        <span className="text-xs font-semibold text-white/50 tracking-wider uppercase">
+          {answeredCount} / {questions.length} Answered
+        </span>
+      </div>
+
+      {/* Thin Progress Indicator */}
+      <div className="w-full bg-white/5 h-[1.5px] rounded-full my-2 shrink-0 overflow-hidden">
+        <div 
+          className="bg-white h-full transition-all duration-300 rounded-full" 
+          style={{ width: `${progress}%` }} 
+        />
+      </div>
+
+      {/* Slim Question Navigator */}
+      <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none py-1 mb-2 shrink-0">
+        {getPageNumbers().map((num, idx) => {
+          if (num === '...') {
+            return (
+              <span key={`dots-${idx}`} className="w-8 text-center text-white/30 text-xs font-bold select-none">
+                ...
+              </span>
+            );
+          }
+          const qIdx = num - 1;
+          const isAns = answers[questions[qIdx].id] !== undefined;
+          const isCur = qIdx === current;
+          
+          return (
+            <button
+              key={qIdx}
+              onClick={() => setCurrent(qIdx)}
+              className={`w-8 h-8 rounded-lg text-xs font-bold transition-all shrink-0 flex items-center justify-center ${
+                isCur
+                  ? "bg-white text-black shadow-glow"
+                  : isAns
+                  ? "bg-white/15 text-white border border-white/5"
+                  : "bg-white/5 border border-white/5 text-white/40 hover:text-white"
+              }`}
+            >
+              {num}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main Question Card */}
+      <Card className="glass stroke-anim rounded-2xl p-4 md:p-5 flex-grow flex flex-col justify-between overflow-hidden">
+        {/* Scrollable Question Content (Question text + Image + Options) */}
+        <div className="flex-grow overflow-y-auto pr-0.5 space-y-3.5 scrollbar-none flex flex-col justify-between">
+          {/* Question Text */}
+          <div className="shrink-0">
+            <h2 className="text-xs font-semibold text-white/45 uppercase tracking-wider mb-1">
+              Question {current + 1} of {questions.length}
+            </h2>
+            <h1 className="text-[15px] md:text-[17px] font-bold text-white leading-snug tracking-tight break-words">
+              {q.question_text}
+            </h1>
+          </div>
+
+          {/* Optional Image */}
           {q.image_url && (
-            <img
-              src={q.image_url}
-              alt=""
-              className="rounded-lg mb-6 max-h-64 mx-auto"
-            />
+            <div className="shrink-0 flex justify-center bg-black/20 rounded-xl p-1.5 border border-white/5 my-1">
+              <img
+                src={q.image_url}
+                alt=""
+                className="rounded-lg max-h-24 md:max-h-28 object-contain"
+              />
+            </div>
           )}
-          <div className="space-y-3">
+
+          {/* Options List */}
+          <div className="space-y-2 flex-grow flex flex-col justify-center">
             {q.options.map((opt, idx) => {
               const selected = answers[q.id] === idx;
               return (
                 <button
                   key={idx}
                   onClick={() => selectOption(idx)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 min-h-[56px] flex items-center ${selected ? "border-white bg-white/10" : "border-white/10 hover:border-white/30 hover:bg-white/5 active:scale-[0.99]"}`}
+                  className={`w-full text-left p-3 rounded-xl border transition-all duration-155 flex items-center gap-3 shrink-0 ${
+                    selected 
+                      ? "border-white bg-white/10" 
+                      : "border-white/5 bg-white/5 hover:border-white/15 active:scale-[0.99]"
+                  }`}
                 >
-                  <div className="flex items-center gap-3 w-full">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 transition-colors duration-200 ${selected ? "bg-white text-black" : "bg-white/10 text-white"}`}
-                    >
-                      {String.fromCharCode(65 + idx)}
-                    </div>
-                    <span className="flex-1 break-words">{opt}</span>
-                    {selected && (
-                      <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
-                    )}
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 transition-colors duration-150 ${
+                      selected ? "bg-white text-black" : "bg-white/10 text-white/70"
+                    }`}
+                  >
+                    {String.fromCharCode(65 + idx)}
                   </div>
+                  <span className="flex-1 text-[13px] md:text-sm font-medium text-white/90 break-words leading-tight">
+                    {opt}
+                  </span>
+                  {selected && (
+                    <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+                  )}
                 </button>
               );
             })}
           </div>
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-              disabled={current === 0}
-              className="h-11"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" /> Previous
-            </Button>
-            {current === questions.length - 1 ? (
-              <Button
-                onClick={() => setShowConfirm(true)}
-                className="h-11 bg-white text-black hover:bg-white/90"
-              >
-                <Send className="w-4 h-4 mr-1" /> Submit Quiz
-              </Button>
-            ) : (
-              <Button
-                onClick={() =>
-                  setCurrent((c) => Math.min(questions.length - 1, c + 1))
-                }
-                className="h-11 bg-white text-black hover:bg-white/90"
-              >
-                Next <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-          </div>
-        </Card>
+        </div>
 
-        {/* Palette */}
-        <Card className="glass stroke-anim p-4 h-fit rounded-2xl lg:sticky lg:top-4">
-          <h3 className="font-bold mb-3">Question Palette</h3>
-          <div className="grid grid-cols-5 gap-2 mb-4">
-            {questions.map((qq, i) => {
-              const isAns = answers[qq.id] !== undefined;
-              const isMark = marked.has(qq.id);
-              const isCur = i === current;
-              let cls = "bg-white/10 text-white/70";
-              if (isAns && isMark) cls = "bg-white text-black ring-1 ring-white";
-              else if (isAns) cls = "bg-white text-black";
-              else if (isMark) cls = "bg-transparent border border-white text-white";
-              if (isCur) cls += " ring-2 ring-white/60";
-              return (
-                <button
-                  key={i}
-                  onClick={() => setCurrent(i)}
-                  className={`w-10 h-10 rounded-lg text-sm font-bold transition-transform duration-150 active:scale-95 ${cls}`}
-                >
-                  {i + 1}
-                </button>
-              );
-            })}
-          </div>
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-white" /> Answered
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-white/10" /> Not Answered
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded border border-white" /> Marked
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-white ring-1 ring-white" /> Answered +
-              Marked
-            </div>
-          </div>
+        {/* Fixed Actions Bar */}
+        <div className="flex items-center gap-3 mt-4 pt-3.5 border-t border-white/5 shrink-0">
           <Button
-            onClick={() => setShowConfirm(true)}
-            className="w-full mt-4 h-11 bg-white text-black hover:bg-white/90"
+            variant="outline"
+            onClick={() => setCurrent((c) => Math.max(0, c - 1))}
+            disabled={current === 0}
+            className="flex-1 h-10 bg-white/5 hover:bg-white/10 text-white border-white/5 disabled:opacity-30 disabled:hover:bg-white/5"
           >
-            <Send className="w-4 h-4 mr-1" /> Submit Quiz
+            <ArrowLeft className="w-4 h-4 mr-1.5" /> Previous
           </Button>
-        </Card>
+          
+          <Button
+            variant="outline"
+            onClick={() => setCurrent((c) => Math.min(questions.length - 1, c + 1))}
+            disabled={current === questions.length - 1}
+            className="flex-1 h-10 bg-white/5 hover:bg-white/10 text-white border-white/5 disabled:opacity-30 disabled:hover:bg-white/5"
+          >
+            Next <ArrowRight className="w-4 h-4 ml-1.5" />
+          </Button>
+        </div>
+      </Card>
+
+      {/* Submit Button outside Card */}
+      <div className="mt-3 shrink-0">
+        <Button
+          onClick={() => setShowConfirm(true)}
+          className="w-full h-11 bg-white hover:bg-white/90 text-black font-bold text-sm shadow-glow rounded-xl"
+        >
+          Submit Quiz
+        </Button>
       </div>
 
+      {/* Confirmation Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-        <DialogContent className="glass-strong rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>Submit Quiz?</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="glass-strong rounded-3xl max-w-[340px] p-5">
+          <DialogHeader className="text-center">
+            <DialogTitle className="text-lg font-bold">Submit Quiz?</DialogTitle>
+            <DialogDescription className="text-xs text-white/60 pt-2">
               You have answered{" "}
               <span className="font-bold text-white">{answeredCount}</span>{" "}
-              out of <span className="font-bold">{questions.length}</span>{" "}
+              out of <span className="font-bold text-white">{questions.length}</span>{" "}
               questions. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirm(false)}>
+          <DialogFooter className="flex flex-row gap-2 mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirm(false)} 
+              className="flex-1 h-10 bg-white/5 text-white border-white/5 hover:bg-white/10"
+            >
               Cancel
             </Button>
             <Button
               onClick={doSubmit}
-              className="bg-white text-black hover:bg-white/90"
+              className="flex-1 h-10 bg-white text-black hover:bg-white/90 font-bold"
             >
               Submit Now
             </Button>
@@ -597,8 +646,35 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 // ---------- RESULTS ----------
 function Results({ result }) {
   const pct = result?.percentage ?? 0;
+
+  useEffect(() => {
+    // Load Tenor embed script
+    const script = document.createElement("script");
+    script.src = "https://tenor.com/embed.js";
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4 relative">
+      {/* Absolute positioned GIF above Results Box */}
+      <div 
+        style={{
+          position: 'absolute',
+          transform: 'translate(0px, -310px)',
+          width: '150px',
+          zIndex: 20,
+        }}
+      >
+        <div className="tenor-gif-embed" data-postid="5034219186050115128" data-share-method="host" data-aspect-ratio="0.993976" data-width="100%">
+          <a href="https://tenor.com/view/cat-scuba-dance-gif-5034219186050115128">Cat Scuba GIF</a>
+        </div>
+      </div>
+
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -674,6 +750,7 @@ function Results({ result }) {
           </div>
         </div>
       </motion.div>
+
       <p className="text-[11px] tracking-[0.3em] uppercase text-white/35">
         Developed By SHREYAS & SHRAVAN
       </p>
