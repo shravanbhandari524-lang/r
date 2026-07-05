@@ -524,7 +524,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
               <img
                 src={q.image_url}
                 alt=""
-                className="rounded-lg max-h-36 md:max-h-39 object-contain"
+                className="rounded-lg max-h-47 md:max-h-50 object-contain"
               />
             </div>
           )}
