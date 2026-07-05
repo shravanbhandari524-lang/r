@@ -234,7 +234,7 @@ function Waiting({ participant, onStart }) {
     return () => clearInterval(iv);
   }, [onStart]);
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -259,6 +259,9 @@ function Waiting({ participant, onStart }) {
           The quiz will begin automatically when the admin starts it.
         </p>
       </motion.div>
+      <p className="text-[11px] tracking-[0.3em] uppercase text-white/35">
+        Developed By SHREYAS & SHRAVAN
+      </p>
     </div>
   );
 }
@@ -560,79 +563,88 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 }
 
 // ---------- RESULTS ----------
-function Results({ result, onLeaderboard }) {
+function Results({ result }) {
   const pct = result?.percentage ?? 0;
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="glass rounded-3xl p-8 md:p-10 max-w-2xl w-full"
+        className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-2xl w-full"
       >
-        <div className="text-center mb-6">
+        <div className="text-center mb-4">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.25, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white text-black mb-4 shadow-glow"
+            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-black mb-3 bg-gradient-to-b from-white to-zinc-300 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.95),inset_0_-2px_3px_rgba(0,0,0,0.2),0_6px_18px_rgba(0,0,0,0.5)]"
           >
-            <CheckCircle2 className="w-10 h-10" />
+            <motion.svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 52 52"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-7 h-7"
+            >
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.45, duration: 0.5, ease: "easeOut" }}
+                d="M14 27 L22 35 L38 17"
+              />
+            </motion.svg>
           </motion.div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+          <h1 className="font-display text-[3.4rem] md:text-[5rem] font-black tracking-wide mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
             Quiz Submitted!
           </h1>
           <p className="text-muted-foreground">
             Great job, {result?.participant_name || "Champion"}!
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="glass rounded-xl p-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="glass rounded-xl p-3 text-center">
             <CheckCircle2 className="w-5 h-5 mx-auto mb-2 text-white" />
-            <div className="text-3xl font-black text-white">
+            <div className="text-3xl font-black text-green-400">
               {result?.correct ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Correct</div>
           </div>
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="glass rounded-xl p-3 text-center">
             <XCircle className="w-5 h-5 mx-auto mb-2 text-white/35" />
-            <div className="text-3xl font-black text-white/40">
+            <div className="text-3xl font-black text-red-400">
               {result?.wrong ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Wrong</div>
           </div>
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="glass rounded-xl p-3 text-center">
             <Trophy className="w-5 h-5 mx-auto mb-2 text-white/70" />
             <div className="text-3xl font-black text-white">
               {result?.score ?? 0}
             </div>
             <div className="text-xs text-muted-foreground mt-1">Score</div>
           </div>
-          <div className="glass rounded-xl p-4 text-center">
+          <div className="glass rounded-xl p-3 text-center">
             <Award className="w-5 h-5 mx-auto mb-2 text-white/70" />
             <div className="text-3xl font-black text-white">{pct}%</div>
             <div className="text-xs text-muted-foreground mt-1">Percentage</div>
           </div>
         </div>
-        <div className="glass rounded-xl p-4 mb-6 text-sm text-center">
+        <div className="glass rounded-xl p-3 mb-4 text-sm text-center">
           <div className="text-muted-foreground">
             Time taken:{" "}
             <span className="text-white font-bold">
               {fmtTime(result?.time_taken_seconds || 0)}
-            </span>{" "}
-            &middot; Submitted at{" "}
-            <span className="text-white font-mono">
-              {new Date(result?.submission_time).toLocaleTimeString()}
             </span>
           </div>
         </div>
-        <Button
-          onClick={onLeaderboard}
-          className="w-full h-12 rounded-xl bg-white text-black hover:bg-white/90 active:scale-[0.98] transition-transform duration-200"
-        >
-          <Trophy className="w-5 h-5 mr-2" /> View Leaderboard
-        </Button>
       </motion.div>
+      <p className="text-[11px] tracking-[0.3em] uppercase text-white/35">
+        Developed By SHREYAS & SHRAVAN
+      </p>
     </div>
   );
 }
@@ -897,11 +909,28 @@ function App() {
   if (view === "loading")
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="glass rounded-3xl p-8 max-w-md w-full space-y-4">
-          <Skeleton className="h-16 w-16 rounded-2xl mx-auto" />
-          <Skeleton className="h-9 w-3/4 mx-auto" />
-          <Skeleton className="h-4 w-1/2 mx-auto" />
-          <Skeleton className="h-12 w-full rounded-xl" />
+        <div className="glass stroke-anim rounded-[20px] p-8 md:p-12 max-w-3xl w-full text-center">
+          {/* title */}
+          <Skeleton className="h-[3.4rem] md:h-[5rem] w-[16rem] md:w-[24rem] mx-auto mb-3 rounded-lg" />
+          {/* subtitle */}
+          <Skeleton className="h-4 md:h-5 w-[20rem] md:w-[26rem] mx-auto mb-8 rounded-md" />
+          {/* info chips — mirrors the 2-col glass grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-8 max-w-md mx-auto">
+            {[0, 1].map((i) => (
+              <div key={i} className="glass rounded-xl p-4">
+                <Skeleton className="w-6 h-6 mx-auto mb-2 rounded-md" />
+                <Skeleton className="h-4 w-20 mx-auto mb-1 rounded" />
+                <Skeleton className="h-3 w-16 mx-auto rounded" />
+              </div>
+            ))}
+          </div>
+          {/* CTA button */}
+          <Skeleton className="h-12 w-full md:w-72 mx-auto rounded-xl" />
+          {/* warning line */}
+          <div className="flex items-center justify-center gap-1.5 mt-6">
+            <Skeleton className="w-3.5 h-3.5 rounded-sm" />
+            <Skeleton className="h-3 w-28 rounded" />
+          </div>
         </div>
       </div>
     );
@@ -919,10 +948,7 @@ function App() {
         onSubmit={onSubmit}
       />
     );
-  if (view === "results")
-    return (
-      <Results result={result} onLeaderboard={() => setView("leaderboard")} />
-    );
+  if (view === "results") return <Results result={result} />;
   if (view === "leaderboard")
     return <Leaderboard myResult={result} onRestart={restart} />;
   return null;

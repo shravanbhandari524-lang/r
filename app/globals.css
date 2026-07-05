@@ -86,7 +86,7 @@
     background-image:
       radial-gradient(ellipse 80% 45% at 50% -12%, hsla(0, 0%, 100%, 0.05), transparent 60%),
       radial-gradient(ellipse 60% 40% at 88% 112%, hsla(0, 0%, 100%, 0.03), transparent 55%),
-      linear-gradient(rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.78)),
+      linear-gradient(rgba(0, 0, 0, 0.83), rgba(0, 0, 0, 0.9)),
       url('/bg.jpg');
     background-size: cover;
     background-position: center;
