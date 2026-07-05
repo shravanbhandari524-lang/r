@@ -598,7 +598,7 @@ function Results({ result }) {
               />
             </motion.svg>
           </motion.div>
-          <h1 className="font-display text-[3rem] md:text-[5rem] font-black tracking-wide mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+          <h1 className="font-display text-[2.8rem] md:text-[5rem] font-black tracking-wide mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
             Quiz Submitted!
           </h1>
           <p className="text-muted-foreground">
