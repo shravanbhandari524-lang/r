@@ -354,11 +354,11 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       // Clear draft on success
       try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
       
-      // Trigger the 3s GIF transition screen
+      // Trigger the 5s GIF transition screen
       setShowGifTransition(true);
       setTimeout(() => {
         onSubmit(data.result);
-      }, 3000);
+      }, 5000);
     } catch (err) {
       // Allow retry — server-side is idempotent
       submittedRef.current = false;
@@ -433,32 +433,6 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
     return [1, '...', currentNum - 1, currentNum, currentNum + 1, '...', total];
   };
 
-  if (showGifTransition) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center gap-4 shadow-2xl"
-        >
-          <div className="w-[280px] h-[280px] flex items-center justify-center overflow-hidden rounded-2xl bg-black/40 border border-white/5">
-            <iframe
-              src="https://tenor.com/embed/5034219186050115128"
-              frameBorder="0"
-              scrolling="no"
-              allowFullScreen
-              className="w-full h-full rounded-2xl"
-            />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-wide text-white">Submitting Answers...</h2>
-            <p className="text-xs text-white/50">Saving your scores and details</p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-[100dvh] w-full flex flex-col justify-between p-3 md:p-4 no-select max-w-md mx-auto overflow-hidden">
@@ -632,6 +606,37 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* GIF preloaded silently in background from quiz start, shown on submit */}
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(12px)',
+          padding: '1rem',
+          opacity: showGifTransition ? 1 : 0,
+          pointerEvents: showGifTransition ? 'all' : 'none',
+          transition: 'opacity 0.3s ease',
+        }}
+      >
+        <div className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center gap-4 shadow-2xl">
+          <div className="w-[280px] h-[280px] overflow-hidden rounded-2xl bg-black/40 border border-white/5">
+            {/* iframe always mounted so browser preloads it during quiz */}
+            <iframe
+              src="https://tenor.com/embed/5034219186050115128"
+              frameBorder="0"
+              scrolling="no"
+              allowFullScreen
+              className="w-full h-full rounded-2xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold tracking-wide text-white">Submitting Answers...</h2>
+            <p className="text-xs text-white/50">Saving your scores and details</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
