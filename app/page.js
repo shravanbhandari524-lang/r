@@ -301,18 +301,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [showGifTransition, setShowGifTransition] = useState(false);
 
-  // Load Tenor embed script when transition overlay mounts
-  useEffect(() => {
-    if (!showGifTransition) return;
-    const script = document.createElement("script");
-    script.src = "https://tenor.com/embed.js";
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      try { document.body.removeChild(script); } catch (_) {}
-    };
-  }, [showGifTransition]);
+
 
   // Load answers/marked from localStorage after mount to prevent hydration mismatch
   useEffect(() => {
@@ -365,11 +354,11 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
       // Clear draft on success
       try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
       
-      // Trigger the 2.5s GIF transition screen
+      // Trigger the 3s GIF transition screen
       setShowGifTransition(true);
       setTimeout(() => {
         onSubmit(data.result);
-      }, 2500);
+      }, 3000);
     } catch (err) {
       // Allow retry — server-side is idempotent
       submittedRef.current = false;
@@ -454,9 +443,13 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           className="glass stroke-anim rounded-3xl p-6 md:p-8 max-w-sm w-full text-center flex flex-col items-center gap-4 shadow-2xl"
         >
           <div className="w-[280px] h-[280px] flex items-center justify-center overflow-hidden rounded-2xl bg-black/40 border border-white/5">
-            <div className="tenor-gif-embed" data-postid="5034219186050115128" data-share-method="host" data-aspect-ratio="0.993976" data-width="100%">
-              <a href="https://tenor.com/view/cat-scuba-dance-gif-5034219186050115128">Cat Scuba GIF</a>
-            </div>
+            <iframe
+              src="https://tenor.com/embed/5034219186050115128"
+              frameBorder="0"
+              scrolling="no"
+              allowFullScreen
+              className="w-full h-full rounded-2xl"
+            />
           </div>
           <div className="space-y-1">
             <h2 className="text-xl font-bold tracking-wide text-white">Submitting Answers...</h2>
@@ -647,34 +640,8 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 function Results({ result }) {
   const pct = result?.percentage ?? 0;
 
-  useEffect(() => {
-    // Load Tenor embed script
-    const script = document.createElement("script");
-    script.src = "https://tenor.com/embed.js";
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4 relative">
-      {/* Absolute positioned GIF above Results Box */}
-      <div 
-        style={{
-          position: 'absolute',
-          transform: 'translate(0px, -310px)',
-          width: '150px',
-          zIndex: 20,
-        }}
-      >
-        <div className="tenor-gif-embed" data-postid="5034219186050115128" data-share-method="host" data-aspect-ratio="0.993976" data-width="100%">
-          <a href="https://tenor.com/view/cat-scuba-dance-gif-5034219186050115128">Cat Scuba GIF</a>
-        </div>
-      </div>
-
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
