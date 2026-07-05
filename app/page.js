@@ -142,7 +142,10 @@ function Register({ onRegistered }) {
         return;
       }
       localStorage.setItem(PID_KEY, data.participant.id);
-      toast.success("Registered! Get ready for the quiz.");
+      toast.success(
+        `Registered! Your number is #${data.participant.reg_number} — note it down.`,
+        { duration: 8000 }
+      );
       onRegistered(data.participant);
     } catch (err) {
       toast.error("Network error");
@@ -251,13 +254,20 @@ function Waiting({ participant, onStart }) {
         <h2 className="text-2xl font-bold tracking-tight mb-2">
           Waiting for quiz to start...
         </h2>
-        <p className="text-muted-foreground mb-4">
+        <p className="text-muted-foreground mb-3">
           Hi{" "}
-          <span className="text-white font-semibold">
-            {participant.name}
-          </span>
+          <span className="text-white font-semibold">{participant.name}</span>
           , please stay on this page.
         </p>
+        {participant.reg_number && (
+          <div className="mb-5">
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Your Registration Number</p>
+            <div className="inline-flex items-center justify-center bg-gradient-to-b from-white to-zinc-300 shadow-[inset_0_1.5px_0_rgba(255,255,255,0.95),inset_0_-2px_3px_rgba(0,0,0,0.2),0_6px_18px_rgba(0,0,0,0.5)] text-black font-black text-4xl tracking-[0.2em] rounded-2xl px-8 py-4 select-all">
+              #{participant.reg_number}
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Screenshot or note this down</p>
+          </div>
+        )}
         <p className="text-sm text-muted-foreground mb-6">
           The quiz will begin when the admin starts it. Tap below to check.
         </p>

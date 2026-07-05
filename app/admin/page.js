@@ -51,7 +51,7 @@ function Login({ onLogin }) {
   }
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <motion.div initial={{opacity:0, y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4, ease:'easeOut'}} className="glass rounded-3xl p-8 max-w-md w-full">
+      <motion.div initial={{opacity:0, y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4, ease:'easeOut'}} className="glass stroke-anim rounded-3xl p-8 max-w-md w-full">
         <div className="text-center mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 border border-white/10 mb-4 shadow-glow"><Shield className="w-8 h-8 text-white"/></div>
           <h2 className="text-2xl font-bold tracking-tight">Admin Portal</h2>

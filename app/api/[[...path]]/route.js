@@ -71,9 +71,16 @@ async function ensureSeed(db) {
     }));
     await db.collection('questions').insertMany(docs);
   }
+  // Seed the sequential registration counter (upsert — safe on warm restarts)
+  await db.collection('counters').updateOne(
+    { _id: 'participant_seq' },
+    { $setOnInsert: { seq: 1000 } },
+    { upsert: true }
+  );
   // Indexes
   try {
     await db.collection('participants').createIndex({ id: 1 }, { unique: true });
+    await db.collection('participants').createIndex({ reg_number: 1 }, { unique: true, sparse: true });
     await db.collection('questions').createIndex({ quiz_id: 1, order: 1 });
     await db.collection('results').createIndex({ score: -1, time_taken_seconds: 1 });
     await db.collection('results').createIndex({ participant_id: 1 }, { unique: true });
@@ -140,8 +147,16 @@ async function handle(request, method, pathParts) {
       const existing = await db.collection('participants').findOne({ usn: usn.trim().toUpperCase() });
       if (existing) return json({ error: 'A participant with this USN/Roll number already exists' }, 409);
     }
+    // Atomically grab the next sequential registration number — race-proof even at 500 concurrent requests
+    const counter = await db.collection('counters').findOneAndUpdate(
+      { _id: 'participant_seq' },
+      { $inc: { seq: 1 } },
+      { returnDocument: 'after', upsert: true }
+    );
+    const reg_number = counter.seq;
     const participant = {
       id: uuidv4(),
+      reg_number,
       name: name.trim(),
       course: course.trim(),
       usn: usn ? usn.trim().toUpperCase() : null,
