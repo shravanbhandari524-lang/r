@@ -179,6 +179,8 @@ function Dashboard({ onLogout }) {
   const [duration, setDuration] = useState(10)
   const [title, setTitle] = useState('')
 
+  const [refreshing, setRefreshing] = useState(false)
+
   const loadAll = async () => {
     const [s, q, p, r] = await Promise.all([
       api('admin/stats').then(r=>r.json()),
@@ -192,7 +194,12 @@ function Dashboard({ onLogout }) {
     setResults(r.results || [])
     if (s.quiz) { setDuration(s.quiz.duration_minutes); setTitle(s.quiz.title) }
   }
-  useEffect(() => { loadAll(); const iv = setInterval(loadAll, 5000); return ()=>clearInterval(iv) }, [])
+  useEffect(() => { loadAll() }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try { await loadAll() } finally { setRefreshing(false) }
+  }
 
   const startQuiz = async () => {
     if (questions.length === 0) { toast.error('Add at least one question first'); return }
@@ -242,6 +249,10 @@ function Dashboard({ onLogout }) {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="glass rounded-lg px-3 py-1.5"><StatusDot status={status}/></div>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="h-9">
+            <RotateCcw className={`w-4 h-4 mr-1 ${refreshing ? 'animate-spin' : ''}`}/>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </Button>
           <Button variant="outline" size="icon" onClick={() => window.location.href = '/'} className="h-9 w-9"><Home className="w-4 h-4"/></Button>
           <Button variant="outline" size="sm" onClick={onLogout} className="h-9"><LogOut className="w-4 h-4 mr-1"/> Logout</Button>
         </div>

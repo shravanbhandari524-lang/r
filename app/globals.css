@@ -78,6 +78,9 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  .font-display {
+    font-synthesis: none;
+  }
   body::before { /* ponytail: fixed bg layer so we can GPU-zoom it; transform is compositor-only, 0 main-thread cost */
     content: '';
     position: fixed;

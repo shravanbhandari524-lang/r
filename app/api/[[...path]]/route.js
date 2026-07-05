@@ -76,6 +76,8 @@ async function ensureSeed(db) {
     await db.collection('participants').createIndex({ id: 1 }, { unique: true });
     await db.collection('questions').createIndex({ quiz_id: 1, order: 1 });
     await db.collection('results').createIndex({ score: -1, time_taken_seconds: 1 });
+    await db.collection('results').createIndex({ participant_id: 1 }, { unique: true });
+    await db.collection('responses').createIndex({ participant_id: 1 }, { unique: true });
   } catch (_) {}
   seeded = true;
   return quiz;
@@ -98,14 +100,35 @@ async function handle(request, method, pathParts) {
     return json({ quiz: q, server_time: new Date().toISOString() });
   }
 
-  // Get questions (public, without correct answers)
+  // Get questions (public, without correct answers) — also records individual start time exactly once
   if (path === 'quiz/questions' && method === 'GET') {
     const q = await db.collection('quiz').findOne({ id: 'main' });
     if (!q || q.status === 'idle') return json({ error: 'Quiz has not started' }, 403);
+    if (q.status === 'ended') return json({ error: 'Quiz has ended' }, 403);
+    const participant_id = url.searchParams.get('participant_id');
+    let started_at = null;
+    if (participant_id) {
+      const existing = await db.collection('responses').findOne({ participant_id });
+      if (!existing) {
+        started_at = new Date().toISOString();
+        await db.collection('responses').insertOne({
+          id: uuidv4(),
+          participant_id,
+          quiz_id: 'main',
+          answers: {},
+          marked: [],
+          started_at,
+          submitted: false,
+          submitted_at: null,
+        });
+      } else {
+        started_at = existing.started_at;
+      }
+    }
     const questions = await db.collection('questions')
       .find({ quiz_id: 'main' }, { projection: { _id: 0, correct_index: 0 } })
       .sort({ order: 1 }).toArray();
-    return json({ questions });
+    return json({ questions, started_at });
   }
 
   // Register participant
@@ -137,54 +160,28 @@ async function handle(request, method, pathParts) {
     return json({ participant: p, result, response });
   }
 
-  // Save answer (auto-save)
-  if (path === 'quiz/answer' && method === 'POST') {
-    const body = await request.json();
-    const { participant_id, question_id, selected_index, marked } = body;
-    if (!participant_id || !question_id) return json({ error: 'Missing fields' }, 400);
-    const existing = await db.collection('responses').findOne({ participant_id });
-    const now = new Date().toISOString();
-    if (!existing) {
-      await db.collection('responses').insertOne({
-        id: uuidv4(),
-        participant_id,
-        quiz_id: 'main',
-        answers: { [question_id]: selected_index },
-        marked: marked ? [question_id] : [],
-        started_at: now,
-        submitted: false,
-        submitted_at: null,
-      });
-    } else {
-      if (existing.submitted) return json({ error: 'Already submitted' }, 403);
-      const answers = existing.answers || {};
-      if (selected_index === null || selected_index === undefined) {
-        delete answers[question_id];
-      } else {
-        answers[question_id] = selected_index;
-      }
-      let markedArr = existing.marked || [];
-      if (marked === true && !markedArr.includes(question_id)) markedArr.push(question_id);
-      if (marked === false) markedArr = markedArr.filter(id => id !== question_id);
-      await db.collection('responses').updateOne(
-        { participant_id },
-        { $set: { answers, marked: markedArr } }
-      );
-    }
-    return json({ ok: true });
-  }
-
   // Submit quiz
   if (path === 'quiz/submit' && method === 'POST') {
     const body = await request.json();
-    const { participant_id } = body;
+    const { participant_id, answers: submittedAnswers, marked: submittedMarked } = body;
     if (!participant_id) return json({ error: 'Missing participant_id' }, 400);
     const existing = await db.collection('responses').findOne({ participant_id });
+
+    // Idempotency: already submitted — return existing result
+    if (existing && existing.submitted) {
+      const existingResult = await db.collection('results').findOne({ participant_id });
+      if (existingResult) return json({ result: { ...existingResult, _id: undefined } });
+    }
+
     const participant = await db.collection('participants').findOne({ id: participant_id });
     if (!participant) return json({ error: 'Participant not found' }, 404);
     const quiz = await db.collection('quiz').findOne({ id: 'main' });
     const questions = await db.collection('questions').find({ quiz_id: 'main' }).toArray();
-    const answers = (existing && existing.answers) || {};
+
+    // Use submitted answers; fall back to any stored draft answers
+    const answers = submittedAnswers || (existing && existing.answers) || {};
+    const markedArr = submittedMarked || (existing && existing.marked) || [];
+
     let correct = 0;
     let wrong = 0;
     for (const q of questions) {
@@ -199,10 +196,13 @@ async function handle(request, method, pathParts) {
     const time_taken_seconds = Math.max(0, Math.floor((new Date(submitted_at) - new Date(started_at)) / 1000));
 
     if (existing) {
-      await db.collection('responses').updateOne({ participant_id }, { $set: { submitted: true, submitted_at } });
+      await db.collection('responses').updateOne(
+        { participant_id },
+        { $set: { answers, marked: markedArr, submitted: true, submitted_at } }
+      );
     } else {
       await db.collection('responses').insertOne({
-        id: uuidv4(), participant_id, quiz_id: 'main', answers: {}, marked: [], started_at, submitted: true, submitted_at,
+        id: uuidv4(), participant_id, quiz_id: 'main', answers, marked: markedArr, started_at, submitted: true, submitted_at,
       });
     }
 

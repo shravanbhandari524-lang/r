@@ -73,7 +73,7 @@ function Landing({ onEnter, quizTitle }) {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="glass stroke-anim rounded-[20px] p-8 md:p-12 max-w-3xl w-full text-center"
       >
-        <h1 className="font-display text-[3.4rem] md:text-[5rem] font-black tracking-wide mb-3 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+        <h1 className="font-display text-[3.4rem] md:text-[5rem] font-normal tracking-wide mb-3 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
           Quiz Challenge
         </h1>
         <p className="text-base md:text-lg text-muted-foreground mb-8">
@@ -162,7 +162,7 @@ function Register({ onRegistered }) {
           <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center">
             <User className="w-6 h-6 text-white" />
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-black tracking-wide">Register</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-normal tracking-wide">Register</h2>
         </div>
         <form onSubmit={submit} className="space-y-4">
           <div>
@@ -219,20 +219,23 @@ function Register({ onRegistered }) {
 
 // ---------- WAITING ----------
 function Waiting({ participant, onStart }) {
-  useEffect(() => {
-    const iv = setInterval(async () => {
+  const [checking, setChecking] = useState(false);
+
+  const checkStatus = async () => {
+    setChecking(true);
+    try {
       const res = await fetch("/api/quiz");
       const data = await res.json();
-      if (data.quiz?.status === "running") {
+      if (data.quiz?.status === "running" || data.quiz?.status === "ended") {
         onStart(data);
-        clearInterval(iv);
-      } else if (data.quiz?.status === "ended") {
-        onStart(data);
-        clearInterval(iv);
+      } else {
+        toast.info("Quiz hasn't started yet — check back soon.");
       }
-    }, 3000);
-    return () => clearInterval(iv);
-  }, [onStart]);
+    } finally {
+      setChecking(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
       <motion.div
@@ -255,9 +258,17 @@ function Waiting({ participant, onStart }) {
           </span>
           , please stay on this page.
         </p>
-        <p className="text-sm text-muted-foreground">
-          The quiz will begin automatically when the admin starts it.
+        <p className="text-sm text-muted-foreground mb-6">
+          The quiz will begin when the admin starts it. Tap below to check.
         </p>
+        <Button
+          onClick={checkStatus}
+          disabled={checking}
+          className="h-11 bg-white text-black hover:bg-white/90 font-semibold"
+        >
+          <RotateCw className={`w-4 h-4 mr-2 ${checking ? "animate-spin" : ""}`} />
+          {checking ? "Checking..." : "Check Status"}
+        </Button>
       </motion.div>
       <p className="text-[11px] tracking-[0.3em] uppercase text-white/35">
         Developed By SHREYAS & SHRAVAN
@@ -268,14 +279,34 @@ function Waiting({ participant, onStart }) {
 
 // ---------- QUIZ ----------
 function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
+  const DRAFT_KEY = `fq_draft_${participant.id}`;
+
   const [questions] = useState(initialQs);
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [marked, setMarked] = useState(new Set());
-  const [saving, setSaving] = useState(false);
+  const [answers, setAnswers] = useState(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) return JSON.parse(saved).answers || {};
+    } catch (_) {}
+    return {};
+  });
+  const [marked, setMarked] = useState(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved) return new Set(JSON.parse(saved).marked || []);
+    } catch (_) {}
+    return new Set();
+  });
   const [showConfirm, setShowConfirm] = useState(false);
   const [remaining, setRemaining] = useState(null);
   const submittedRef = useRef(false);
+
+  // Mirror answers/marked to localStorage on every change
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ answers, marked: Array.from(marked) }));
+    } catch (_) {}
+  }, [answers, marked, DRAFT_KEY]);
 
   // compute end time from server started_at + duration
   useEffect(() => {
@@ -292,14 +323,27 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
   const doSubmit = useCallback(async () => {
     if (submittedRef.current) return;
     submittedRef.current = true;
-    const res = await fetch("/api/quiz/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ participant_id: participant.id }),
-    });
-    const data = await res.json();
-    onSubmit(data.result);
-  }, [participant.id, onSubmit]);
+    try {
+      const res = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          participant_id: participant.id,
+          answers,
+          marked: Array.from(marked),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Submit failed");
+      // Clear draft on success
+      try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+      onSubmit(data.result);
+    } catch (err) {
+      // Allow retry — server-side is idempotent
+      submittedRef.current = false;
+      toast.error(err.message || "Submission failed. Please try again.");
+    }
+  }, [participant.id, answers, marked, DRAFT_KEY, onSubmit]);
 
   useEffect(() => {
     if (remaining === 0 && quiz?.started_at) doSubmit();
@@ -327,25 +371,9 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
     };
   }, []);
 
-  const saveAnswer = async (questionId, idx, mark = null) => {
-    setSaving(true);
-    await fetch("/api/quiz/answer", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        participant_id: participant.id,
-        question_id: questionId,
-        selected_index: idx,
-        marked: mark,
-      }),
-    });
-    setSaving(false);
-  };
-
   const selectOption = (idx) => {
     const q = questions[current];
     setAnswers((prev) => ({ ...prev, [q.id]: idx }));
-    saveAnswer(q.id, idx);
   };
 
   const toggleMark = () => {
@@ -355,7 +383,6 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
     if (isMarked) newMarked.delete(q.id);
     else newMarked.add(q.id);
     setMarked(newMarked);
-    saveAnswer(q.id, answers[q.id] ?? null, !isMarked);
   };
 
   const q = questions[current];
@@ -390,15 +417,10 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
           <Badge variant="secondary">
             {answeredCount}/{questions.length} answered
           </Badge>
-          {saving && (
-            <Badge className="bg-white/10 text-white">Saving...</Badge>
-          )}
-          {!saving && (
-            <Badge className="bg-white/10 text-white">
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Auto-saved
-            </Badge>
-          )}
+          <Badge className="bg-white/10 text-white">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Saved on this device
+          </Badge>
         </div>
       </div>
 
@@ -408,7 +430,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         {/* Question */}
-        <Card className="glass p-6 md:p-8 rounded-2xl">
+        <Card className="glass stroke-anim p-6 md:p-8 rounded-2xl">
           <div className="flex items-center justify-between mb-4 gap-2">
             <Badge className="bg-white/10 text-white">
               Question {current + 1} of {questions.length}
@@ -487,7 +509,7 @@ function QuizView({ participant, quiz, questions: initialQs, onSubmit }) {
         </Card>
 
         {/* Palette */}
-        <Card className="glass p-4 h-fit rounded-2xl lg:sticky lg:top-4">
+        <Card className="glass stroke-anim p-4 h-fit rounded-2xl lg:sticky lg:top-4">
           <h3 className="font-bold mb-3">Question Palette</h3>
           <div className="grid grid-cols-5 gap-2 mb-4">
             {questions.map((qq, i) => {
@@ -598,7 +620,7 @@ function Results({ result }) {
               />
             </motion.svg>
           </motion.div>
-          <h1 className="font-display text-[2.9rem] md:text-[5rem] font-black tracking-wide mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
+          <h1 className="font-display text-[2.9rem] md:text-[5.5rem] font-normal tracking-wide mb-2 bg-gradient-to-b from-white to-white/55 bg-clip-text text-transparent">
             Quiz Submitted!
           </h1>
           <p className="text-muted-foreground">
@@ -877,7 +899,7 @@ function App() {
   }, []);
 
   const loadQuiz = async (p, q) => {
-    const res = await fetch("/api/quiz/questions");
+    const res = await fetch(`/api/quiz/questions?participant_id=${encodeURIComponent(p.id)}`);
     if (res.ok) {
       const data = await res.json();
       setQuestions(data.questions);
